@@ -7,7 +7,8 @@ app.use(express.json())
 Object.assign(process.env, {
   HARDHAT_URL: 'https://hardhat.unirep.social/',
   PORT: 4000,
-}, process.env)
+  ...process.env,
+})
 const { HARDHAT_URL, PORT } = process.env
 
 // Make all entries in array keyed to value true in object
@@ -40,16 +41,20 @@ app.post('/', async (req, res) => {
     return
   }
 
-  const r = await fetch(HARDHAT_URL, {
-    method: 'POST',
-    body: JSON.stringify(req.body),
-    headers: {'Content-Type': 'application/json'}
-  })
-  if (!r.ok) {
-    res.status(500).end(r.statusText)
-    return
+  try {
+    const r = await fetch(HARDHAT_URL, {
+      method: 'POST',
+      body: JSON.stringify(req.body),
+      headers: {'Content-Type': 'application/json'}
+    })
+    if (!r.ok) {
+      res.status(500).end(r.statusText)
+      return
+    }
+    r.body.pipe(res)
+  } catch (err) {
+    res.status(500).end(`Uncaught error: ${err.toString()}`)
   }
-  r.body.pipe(res)
 })
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`))
